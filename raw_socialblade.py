@@ -1,5 +1,6 @@
 """Bypass bot-detection to view SocialBlade ranks for YouTube"""
 from seleniumbase import SB
+import os
 with SB(uc=True, test=True, locale_code="en") as sb:
     url = "https://guidedhacking.com/"
     sb.activate_cdp_mode(url)
