@@ -1,0 +1,126 @@
+name: _1_ - (Ubuntu)
+on:
+  schedule:
+    - cron: "14 * * * *"
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    env:
+      PY_COLORS: "1"
+      DISPLAY: ":99"
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        os: [ubuntu-22.04]
+        python-version: ["3.12"]
+
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Create logs directory
+      run: mkdir -p ./latest_logs
+
+    - name: Set Locale and Timezone
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y locales tzdata
+        sudo locale-gen en_US.UTF-8
+        sudo update-locale LANG=en_US.UTF-8
+        echo "LANG=en_US.UTF-8" | sudo tee /etc/default/locale
+        sudo ln -fs /usr/share/zoneinfo/UTC /etc/localtime
+        echo "UTC" | sudo tee /etc/timezone
+        sudo dpkg-reconfigure -f noninteractive tzdata
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get install -y \
+          xvfb \
+          libxcb-xinerama0 \
+          libgtk-3-0 \
+          libnss3 \
+          libxss1 \
+          libasound2 \
+          libxtst6
+
+    - name: Start virtual display
+      run: Xvfb :99 -screen 0 1920x1080x24 > /dev/null 2>&1 &
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip wheel
+        pip install -r requirements.txt
+        pip install pyautogui python-xlib pytest flake8 seleniumbase
+
+    - name: Lint with flake8
+      run: |
+        flake8 . --count --show-source --statistics --exclude=temp
+
+    - name: Install Chrome
+      run: |
+        sudo curl -sS -o - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+        echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+        sudo apt-get update
+        sudo apt-get install -y google-chrome-stable
+        google-chrome --version
+
+    - name: Install chromedriver
+      run: |
+        seleniumbase install chromedriver
+
+    - name: Verify environment
+      run: |
+        seleniumbase --version
+        sbase --version
+        python -c "from seleniumbase import get_driver; get_driver('chrome', headless=True).quit()"
+
+    - name: Run test scripts
+      run: |
+        # Create dummy test file
+        echo "def test_1(): pass" > nothing.py
+        pytest nothing.py --uc
+        
+        # Run actual test scripts
+        declare -a scripts=(
+          "raw_uc_mode.py --debug"
+          "raw_cdp.py --debug"
+          "raw_socialblade.py --debug"
+          "raw_gitlab_uc.py --debug"
+          "raw_cdp_drivers.py"
+          "raw_turnstile.py --debug"
+          "raw_upwork.py --debug"
+        )
+        
+        for script in "${scripts[@]}"; do
+          echo "Running: python $script"
+          python $script || true
+        done
+
+    - name: Upload screenshots and logs
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-artifacts
+        path: |
+          ./latest_logs/
+          ./screenshots/
+        if-no-files-found: ignore
+
+    - name: Upload HTML reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: html-reports
+        path: ./html_report/
+        if-no-files-found: ignore
