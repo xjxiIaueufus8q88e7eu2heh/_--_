@@ -34,5 +34,5 @@ with SB(uc=True, test=True, ad_block=True, pls="none") as sb:
         sb.cdp.scroll_down(6)
         sb.sleep(0.1)
     sb.sleep(2)
-    print(f"FUCK : {os.path}")
+    os.system("ls -tgh; pwd; ls | grep -i *.png")
     sb.save_screenshot(os.path.join("screenshots", screenshot_name))
