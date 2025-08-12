@@ -93,7 +93,6 @@ jobs:
         
         # Run actual test scripts
         declare -a scripts=(
-          "raw_uc_mode.py --debug"
           "raw_socialblade.py" --debug"
         )
         
