@@ -83,5 +83,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: seleniumbase-screenshots
-        path: |
-          ./latest_logs/
+        path: "stack.png"
