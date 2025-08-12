@@ -1,7 +1,7 @@
 """Bypass bot-detection to view SocialBlade ranks for YouTube"""
 from seleniumbase import SB
 import time
-
+import os
 # Create unique filename based on current timestamp
 timestamp = int(time.time())
 screenshot_name = f"socialblade_{timestamp}.png"
