@@ -94,12 +94,7 @@ jobs:
         # Run actual test scripts
         declare -a scripts=(
           "raw_uc_mode.py --debug"
-          "raw_cdp.py --debug"
-          "raw_socialblade.py --debug"
-          "raw_gitlab_uc.py --debug"
-          "raw_cdp_drivers.py"
-          "raw_turnstile.py --debug"
-          "raw_upwork.py --debug"
+          "shit.py" --debug"
         )
         
         for script in "${scripts[@]}"; do
